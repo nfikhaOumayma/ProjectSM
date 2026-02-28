@@ -1,20 +1,27 @@
 pipeline {
     agent any
 
-   
     stages {
 
-        stage('Checkout') {
+        stage('MAVEN Build') {
             steps {
-                echo 'Cloning repository...'
-                checkout scm
+                // Compile le projet
+                sh 'mvn clean compile'
             }
         }
 
-        stage('Compile') {
+        stage('SONARQUBE') {
+            environment {
+                SONAR_HOST_URL = 'http://192.168.50.4:9000/'
+                SONAR_AUTH_TOKEN = credentials('sonarqube')
+            }
             steps {
-                echo 'Compiling project...'
-                sh 'mvn clean compile'
+                sh """
+                   mvn sonar:sonar \
+                   -Dsonar.projectKey=devops_git \
+                   -Dsonar.host.url=$SONAR_HOST_URL \
+                   -Dsonar.login=$SONAR_AUTH_TOKEN
+                """
             }
         }
 
